@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+// Parse warning<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -480,22 +480,36 @@
         }
 
         // Display cyclone information
-        function displayCycloneInfo(cycloneData) {
+        function displayCycloneInfo(cycloneData, warningsData) {
             const container = document.getElementById('cycloneInfo');
             
-            if (!cycloneData.has_active_cyclone || cycloneData.cyclones.length === 0) {
+            // Try to get cyclone name from warnings first, then from cyclone tracking
+            let cycloneName = null;
+            let cycloneInfo = null;
+            
+            if (warningsData && warningsData.cyclone_name) {
+                cycloneName = warningsData.cyclone_name;
+            }
+            
+            if (cycloneData.has_active_cyclone && cycloneData.cyclones.length > 0) {
+                cycloneInfo = cycloneData.cyclones[0];
+                if (!cycloneName) {
+                    cycloneName = cycloneInfo.name;
+                }
+            }
+            
+            if (!cycloneName && !cycloneInfo) {
                 container.innerHTML = '';
                 return;
             }
 
-            const cyclone = cycloneData.cyclones[0];
-            const latest = cyclone.latest_position;
+            const latest = cycloneInfo ? cycloneInfo.latest_position : null;
 
             container.innerHTML = `
                 <div class="cyclone-info">
                     <h3>🌀 Active Tropical Cyclone</h3>
-                    <div class="cyclone-name">${cyclone.name}</div>
-                    ${cyclone.international_name !== 'N/A' ? `<p>International Name: ${cyclone.international_name}</p>` : ''}
+                    <div class="cyclone-name">${cycloneName || 'Unknown'}</div>
+                    ${cycloneInfo && cycloneInfo.international_name !== 'N/A' ? `<p>International Name: ${cycloneInfo.international_name}</p>` : ''}
                     ${latest ? `
                         <p>
                             <strong>Latest Position:</strong> ${latest.latitude}°N, ${latest.longitude}°E<br>
@@ -652,8 +666,8 @@
 
             const highestSignal = Math.max(...allProvinces.map(p => p.signal), 0);
             
-            updateMainStatus(data.warnings.has_active_warning, highestSignal);
-            displayCycloneInfo(data.cyclones);
+            updateMainStatus(data.warnings.has_active_warning || data.warnings.has_tcws, highestSignal);
+            displayCycloneInfo(data.cyclones, data.warnings);
             displayStats(allProvinces);
             populateRegionFilter();
             displayProvinces(allProvinces);
