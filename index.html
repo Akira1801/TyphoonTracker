@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAGASA Weather Alerts - Family Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .status-safe {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+
+        .signal-legend {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .signal-legend h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+
+        .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #f5c6cb;
+        }
+
+        .province-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .province-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .province-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .province-card.signal-1 {
+            border-left: 5px solid #ffc107;
+            background: #fff9e6;
+        }
+
+        .province-card.signal-2 {
+            border-left: 5px solid #ff9800;
+            background: #fff3e0;
+        }
+
+        .province-card.signal-3 {
+            border-left: 5px solid #ff5722;
+            background: #ffebe6;
+        }
+
+        .province-card.signal-4 {
+            border-left: 5px solid #f44336;
+            background: #ffe6e6;
+        }
+
+        .province-card.signal-5 {
+            border-left: 5px solid #9c27b0;
+            background: #f3e5f5;
+        }
+
+        .province-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .province-region {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+
+        .signal-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: white;
+        }
+
+        .signal-badge.signal-1 { background: #ffc107; }
+        .signal-badge.signal-2 { background: #ff9800; }
+        .signal-badge.signal-3 { background: #ff5722; }
+        .signal-badge.signal-4 { background: #f44336; }
+        .signal-badge.signal-5 { background: #9c27b0; }
+
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+
+        .no-data-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .last-update {
+            text-align: center;
+            color: #666;
+            margin-top: 30px;
+            font-size: 0.9em;
+        }
+
+        .cyclone-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .cyclone-info h3 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cyclone-name {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .province-list {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌀 PAGASA Weather Alerts Dashboard</h1>
+            <p>Real-time Tropical Cyclone Wind Signal Warnings</p>
+            <div id="mainStatus"></div>
+        </div>
+
+        <div id="cycloneInfo"></div>
+
+        <div class="stats" id="statsContainer"></div>
+
+        <div class="signal-legend">
+            <h3>Wind Signal Legend</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <span><strong>Signal #1:</strong> 39-61 km/h</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff9800;"></div>
+                    <span><strong>Signal #2:</strong> 62-88 km/h</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff5722;"></div>
+                    <span><strong>Signal #3:</strong> 89-117 km/h</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f44336;"></div>
+                    <span><strong>Signal #4:</strong> 118-184 km/h</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9c27b0;"></div>
+                    <span><strong>Signal #5:</strong> >185 km/h</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="regionFilter">Filter by Region:</label>
+                <select id="regionFilter">
+                    <option value="all">All Regions</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="signalFilter">Filter by Signal:</label>
+                <select id="signalFilter">
+                    <option value="all">All Signals</option>
+                    <option value="1">Signal #1</option>
+                    <option value="2">Signal #2</option>
+                    <option value="3">Signal #3</option>
+                    <option value="4">Signal #4</option>
+                    <option value="5">Signal #5</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="searchBox">Search Province:</label>
+                <input type="text" id="searchBox" placeholder="Type province name...">
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading weather data from PAGASA...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="last-update" id="lastUpdate"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_URL = 'http://localhost:5000/api';
+        let allProvinces = [];
+        let allRegions = new Set();
+
+        // Fetch data from API
+        async function fetchWeatherData() {
+            try {
+                const response = await fetch(`${API_URL}/all`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
+        // Parse warning data to extract provinces with signals
+        function parseWarnings(warningsData) {
+            const provinces = [];
+            
+            if (!warningsData.warnings || !warningsData.warnings.tropical_cyclone) {
+                return provinces;
+            }
+
+            const tcWarning = warningsData.warnings.tropical_cyclone;
+            
+            // Try to parse different possible structures
+            // Structure may vary, so we'll handle multiple cases
+            for (let key in tcWarning) {
+                if (key.toLowerCase().includes('signal') || key.toLowerCase().includes('tcws')) {
+                    const signalData = tcWarning[key];
+                    
+                    // If it's an object with signal levels
+                    if (typeof signalData === 'object' && signalData !== null) {
+                        for (let signalKey in signalData) {
+                            const match = signalKey.match(/signal.*?(\d+)/i) || signalKey.match(/tcws.*?(\d+)/i);
+                            if (match) {
+                                const signalNumber = parseInt(match[1]);
+                                const areas = signalData[signalKey];
+                                
+                                if (Array.isArray(areas)) {
+                                    areas.forEach(area => {
+                                        provinces.push({
+                                            name: area.province || area.area || area,
+                                            region: area.region || 'Unknown Region',
+                                            signal: signalNumber
+                                        });
+                                        allRegions.add(area.region || 'Unknown Region');
+                                    });
+                                } else if (typeof areas === 'string') {
+                                    // Parse comma-separated string
+                                    areas.split(',').forEach(area => {
+                                        const trimmed = area.trim();
+                                        if (trimmed) {
+                                            provinces.push({
+                                                name: trimmed,
+                                                region: 'Unknown Region',
+                                                signal: signalNumber
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return provinces;
+        }
+
+        // Display cyclone information
+        function displayCycloneInfo(cycloneData) {
+            const container = document.getElementById('cycloneInfo');
+            
+            if (!cycloneData.has_active_cyclone || cycloneData.cyclones.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const cyclone = cycloneData.cyclones[0];
+            const latest = cyclone.latest_position;
+
+            container.innerHTML = `
+                <div class="cyclone-info">
+                    <h3>🌀 Active Tropical Cyclone</h3>
+                    <div class="cyclone-name">${cyclone.name}</div>
+                    ${cyclone.international_name !== 'N/A' ? `<p>International Name: ${cyclone.international_name}</p>` : ''}
+                    ${latest ? `
+                        <p>
+                            <strong>Latest Position:</strong> ${latest.latitude}°N, ${latest.longitude}°E<br>
+                            <strong>Wind Speed:</strong> ${latest.wind_speed || 'N/A'} km/h<br>
+                            <strong>Pressure:</strong> ${latest.pressure || 'N/A'} hPa<br>
+                            <strong>As of:</strong> ${latest.datetime}
+                        </p>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Display statistics
+        function displayStats(provinces) {
+            const statsContainer = document.getElementById('statsContainer');
+            
+            const signalCounts = {
+                1: 0, 2: 0, 3: 0, 4: 0, 5: 0
+            };
+
+            provinces.forEach(p => {
+                if (signalCounts[p.signal] !== undefined) {
+                    signalCounts[p.signal]++;
+                }
+            });
+
+            const totalAreas = provinces.length;
+            const highestSignal = Math.max(...provinces.map(p => p.signal), 0);
+
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${totalAreas}</div>
+                    <div class="stat-label">Total Affected Areas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" style="color: ${highestSignal >= 4 ? '#f44336' : highestSignal >= 3 ? '#ff5722' : '#ffc107'}">${highestSignal || 'None'}</div>
+                    <div class="stat-label">Highest Signal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${allRegions.size}</div>
+                    <div class="stat-label">Regions Affected</div>
+                </div>
+            `;
+        }
+
+        // Update main status badge
+        function updateMainStatus(hasWarning, highestSignal) {
+            const statusDiv = document.getElementById('mainStatus');
+            
+            if (!hasWarning) {
+                statusDiv.innerHTML = '<div class="status-badge status-safe">✓ No Active Warnings</div>';
+            } else if (highestSignal >= 4) {
+                statusDiv.innerHTML = '<div class="status-badge status-danger">⚠ CRITICAL WARNING - Signal #' + highestSignal + '</div>';
+            } else if (highestSignal >= 2) {
+                statusDiv.innerHTML = '<div class="status-badge status-warning">⚠ Active Warning - Signal #' + highestSignal + '</div>';
+            } else {
+                statusDiv.innerHTML = '<div class="status-badge status-warning">Active Warning - Signal #' + highestSignal + '</div>';
+            }
+        }
+
+        // Display provinces
+        function displayProvinces(provinces) {
+            const content = document.getElementById('content');
+            
+            if (provinces.length === 0) {
+                content.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">☀️</div>
+                        <h2>No Active Warnings</h2>
+                        <p>All clear! No tropical cyclone wind signals at this time.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by signal number (highest first), then by province name
+            provinces.sort((a, b) => {
+                if (b.signal !== a.signal) return b.signal - a.signal;
+                return a.name.localeCompare(b.name);
+            });
+
+            const html = `
+                <div class="province-list">
+                    ${provinces.map(province => `
+                        <div class="province-card signal-${province.signal}">
+                            <div class="province-name">${province.name}</div>
+                            <div class="province-region">📍 ${province.region}</div>
+                            <span class="signal-badge signal-${province.signal}">Signal #${province.signal}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        // Populate region filter
+        function populateRegionFilter() {
+            const regionFilter = document.getElementById('regionFilter');
+            const sortedRegions = Array.from(allRegions).sort();
+            
+            regionFilter.innerHTML = '<option value="all">All Regions</option>' +
+                sortedRegions.map(region => `<option value="${region}">${region}</option>`).join('');
+        }
+
+        // Filter provinces
+        function filterProvinces() {
+            const regionFilter = document.getElementById('regionFilter').value;
+            const signalFilter = document.getElementById('signalFilter').value;
+            const searchText = document.getElementById('searchBox').value.toLowerCase();
+
+            let filtered = allProvinces;
+
+            // Filter by region
+            if (regionFilter !== 'all') {
+                filtered = filtered.filter(p => p.region === regionFilter);
+            }
+
+            // Filter by signal
+            if (signalFilter !== 'all') {
+                filtered = filtered.filter(p => p.signal === parseInt(signalFilter));
+            }
+
+            // Filter by search
+            if (searchText) {
+                filtered = filtered.filter(p => 
+                    p.name.toLowerCase().includes(searchText) ||
+                    p.region.toLowerCase().includes(searchText)
+                );
+            }
+
+            displayProvinces(filtered);
+        }
+
+        // Main initialization
+        async function init() {
+            const data = await fetchWeatherData();
+            
+            if (!data) {
+                document.getElementById('content').innerHTML = `
+                    <div class="error">
+                        <strong>⚠ Error Loading Data</strong>
+                        <p>Could not connect to the API. Please make sure your API is running at ${API_URL}</p>
+                        <p>Run: <code>python app.py</code></p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Parse and display data
+            allProvinces = parseWarnings(data.warnings);
+            allRegions.clear();
+            allProvinces.forEach(p => allRegions.add(p.region));
+
+            const highestSignal = Math.max(...allProvinces.map(p => p.signal), 0);
+            
+            updateMainStatus(data.warnings.has_active_warning, highestSignal);
+            displayCycloneInfo(data.cyclones);
+            displayStats(allProvinces);
+            populateRegionFilter();
+            displayProvinces(allProvinces);
+
+            // Update last update time
+            const lastUpdate = new Date(data.timestamp).toLocaleString();
+            document.getElementById('lastUpdate').textContent = `Last updated: ${lastUpdate} | Data source: PAGASA`;
+
+            // Setup event listeners
+            document.getElementById('regionFilter').addEventListener('change', filterProvinces);
+            document.getElementById('signalFilter').addEventListener('change', filterProvinces);
+            document.getElementById('searchBox').addEventListener('input', filterProvinces);
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(init, 5 * 60 * 1000);
+
+        // Initial load
+        init();
+    </script>
+</body>
+</html>
