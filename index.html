@@ -1,4 +1,4 @@
-Parse warning<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -410,14 +410,25 @@ Parse warning<!DOCTYPE html>
         // Fetch data from API
         async function fetchWeatherData() {
             try {
-                const response = await fetch(`${API_URL}/all`);
-                const data = await response.json();
+                // Fetch both wind signals and cyclone data
+                const [signalsResponse, cyclonesResponse] = await Promise.all([
+                    fetch(`${API_URL}/wind-signals`),
+                    fetch(`${API_URL}/cyclone`)
+                ]);
                 
-                if (!data.success) {
-                    throw new Error('Failed to fetch data');
+                const signalsData = await signalsResponse.json();
+                const cyclonesData = await cyclonesResponse.json();
+                
+                if (!signalsData.success) {
+                    throw new Error('Failed to fetch signals data');
                 }
 
-                return data;
+                return {
+                    success: true,
+                    warnings: signalsData,
+                    cyclones: cyclonesData,
+                    timestamp: signalsData.timestamp
+                };
             } catch (error) {
                 console.error('Error fetching data:', error);
                 return null;
