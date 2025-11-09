@@ -673,7 +673,7 @@
             // Debug: Log the data structure
             console.log('Full API Response:', data);
             console.log('Warnings data:', data.warnings);
-            console.log('Wind signals:', data.warnings.wind_signals);
+            console.log('Signals array:', data.warnings.signals);
 
             // Parse and display data
             allProvinces = parseWarnings(data.warnings);
