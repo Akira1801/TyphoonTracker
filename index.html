@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Parse warning<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -659,8 +659,15 @@
                 return;
             }
 
+            // Debug: Log the data structure
+            console.log('Full API Response:', data);
+            console.log('Warnings data:', data.warnings);
+            console.log('Wind signals:', data.warnings.wind_signals);
+
             // Parse and display data
             allProvinces = parseWarnings(data.warnings);
+            console.log('Parsed provinces:', allProvinces);
+            
             allRegions.clear();
             allProvinces.forEach(p => allRegions.add(p.region));
 
